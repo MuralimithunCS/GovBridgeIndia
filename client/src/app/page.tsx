@@ -72,7 +72,7 @@ export default function LandingPage() {
           <div className="relative">
             <div className="bg-slate-200 aspect-[4/3] rounded-[40px] overflow-hidden shadow-2xl relative">
               <img 
-                src="https://images.unsplash.com/photo-1590766944538-4f1833095146?q=80&w=2036&auto=format&fit=crop" 
+                src="/gov-building.jpg" 
                 alt="Government Building"
                 className="w-full h-full object-cover"
               />
