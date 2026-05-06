@@ -4,16 +4,43 @@ import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { Mail, Lock, User, ArrowRight, Globe } from 'lucide-react';
+import { auth } from '@/lib/firebase';
+import { createUserWithEmailAndPassword, updateProfile } from 'firebase/auth';
 
 export default function SignupPage() {
   const router = useRouter();
   const [loading, setLoading] = useState(false);
+  const [error, setError] = useState('');
+  const [formData, setFormData] = useState({
+    name: '',
+    email: '',
+    password: ''
+  });
 
-  const handleSignup = () => {
+  const handleSignup = async (e: React.FormEvent) => {
+    e.preventDefault();
     setLoading(true);
-    setTimeout(() => {
+    setError('');
+
+    try {
+      const userCredential = await createUserWithEmailAndPassword(
+        auth, 
+        formData.email, 
+        formData.password
+      );
+      
+      // Update display name
+      await updateProfile(userCredential.user, {
+        displayName: formData.name
+      });
+
       router.push('/dashboard');
-    }, 1500);
+    } catch (err: any) {
+      console.error("Signup error:", err);
+      setError(err.message || "Failed to create account");
+    } finally {
+      setLoading(false);
+    }
   };
 
   return (
@@ -32,7 +59,13 @@ export default function SignupPage() {
           <h1 className="text-3xl font-black text-slate-900 mb-2">Create Account</h1>
           <p className="text-slate-400 text-[15px] font-medium mb-12">Start your personalized benefits journey</p>
 
-          <div className="space-y-6 text-left mb-10">
+          {error && (
+            <div className="mb-6 p-4 bg-red-50 text-red-600 rounded-2xl text-sm font-bold border border-red-100">
+              {error}
+            </div>
+          )}
+
+          <form onSubmit={handleSignup} className="space-y-6 text-left mb-10">
             <div className="space-y-2">
               <label className="text-[11px] font-black text-slate-400 uppercase tracking-widest ml-1">Full Name</label>
               <div className="relative group">
@@ -41,6 +74,9 @@ export default function SignupPage() {
                 </div>
                 <input 
                   type="text" 
+                  required
+                  value={formData.name}
+                  onChange={(e) => setFormData({...formData, name: e.target.value})}
                   placeholder="Muralimithun CS"
                   className="w-full bg-slate-50 border border-slate-100 py-4 pl-14 pr-6 rounded-2xl text-[15px] font-medium placeholder:text-slate-300 outline-none focus:ring-2 focus:ring-[#002f6c]/5 focus:bg-white transition-all"
                 />
@@ -55,6 +91,9 @@ export default function SignupPage() {
                 </div>
                 <input 
                   type="email" 
+                  required
+                  value={formData.email}
+                  onChange={(e) => setFormData({...formData, email: e.target.value})}
                   placeholder="name@example.com"
                   className="w-full bg-slate-50 border border-slate-100 py-4 pl-14 pr-6 rounded-2xl text-[15px] font-medium placeholder:text-slate-300 outline-none focus:ring-2 focus:ring-[#002f6c]/5 focus:bg-white transition-all"
                 />
@@ -69,20 +108,23 @@ export default function SignupPage() {
                 </div>
                 <input 
                   type="password" 
+                  required
+                  value={formData.password}
+                  onChange={(e) => setFormData({...formData, password: e.target.value})}
                   placeholder="••••••••"
                   className="w-full bg-slate-50 border border-slate-100 py-4 pl-14 pr-6 rounded-2xl text-[15px] font-medium placeholder:text-slate-300 outline-none focus:ring-2 focus:ring-[#002f6c]/5 focus:bg-white transition-all"
                 />
               </div>
             </div>
-          </div>
 
-          <button 
-            onClick={handleSignup}
-            disabled={loading}
-            className="w-full bg-[#001b3d] text-white py-5 rounded-2xl font-black text-[15px] flex items-center justify-center gap-3 hover:bg-slate-900 transition-all shadow-xl shadow-[#001b3d]/10 mb-8"
-          >
-            {loading ? 'Creating Account...' : 'Get Started'} <ArrowRight size={18} />
-          </button>
+            <button 
+              type="submit"
+              disabled={loading}
+              className="w-full bg-[#001b3d] text-white py-5 rounded-2xl font-black text-[15px] flex items-center justify-center gap-3 hover:bg-slate-900 transition-all shadow-xl shadow-[#001b3d]/10 mb-8"
+            >
+              {loading ? 'Creating Account...' : 'Get Started'} <ArrowRight size={18} />
+            </button>
+          </form>
 
           <div className="relative flex items-center gap-4 mb-8">
             <div className="flex-grow h-[1px] bg-slate-100"></div>

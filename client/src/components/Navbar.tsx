@@ -1,16 +1,34 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import Link from 'next/link';
-import { usePathname } from 'next/navigation';
-import { Globe, Menu, X } from 'lucide-react';
+import { usePathname, useRouter } from 'next/navigation';
+import { Globe, Menu, X, LogOut } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
+import { auth } from '@/lib/firebase';
+import { onAuthStateChanged, signOut } from 'firebase/auth';
 
 export default function Navbar() {
   const pathname = usePathname();
+  const router = useRouter();
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
+  const [user, setUser] = useState<any>(null);
   
+  useEffect(() => {
+    const unsubscribe = onAuthStateChanged(auth, (currentUser) => {
+      setUser(currentUser);
+    });
+    return () => unsubscribe();
+  }, []);
+
+  const handleLogout = async () => {
+    await signOut(auth);
+    router.push('/login');
+  };
+
   if (pathname === '/login' || pathname === '/signup') return null;
+
+  const initial = user?.displayName?.charAt(0) || user?.email?.charAt(0) || 'U';
 
   return (
     <>
@@ -32,9 +50,26 @@ export default function Navbar() {
             <Globe size={16} />
             <span>English</span>
           </div>
-          <div className="w-8 h-8 bg-[#002f6c] rounded-full flex items-center justify-center text-white font-bold text-xs cursor-pointer">
-            M
-          </div>
+          
+          {user ? (
+            <div className="flex items-center gap-3">
+              <div className="w-8 h-8 bg-[#002f6c] rounded-full flex items-center justify-center text-white font-bold text-xs shadow-lg shadow-[#002f6c]/10">
+                {initial.toUpperCase()}
+              </div>
+              <button 
+                onClick={handleLogout}
+                className="p-2 text-slate-400 hover:text-red-500 transition-colors"
+                title="Logout"
+              >
+                <LogOut size={18} />
+              </button>
+            </div>
+          ) : (
+            <Link href="/login" className="text-[13px] font-black text-[#002f6c] uppercase tracking-widest px-4 py-2 border border-[#002f6c]/10 rounded-xl hover:bg-[#002f6c]/5 transition-all">
+              Login
+            </Link>
+          )}
+
           <button 
             className="lg:hidden text-slate-400"
             onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
@@ -57,6 +92,15 @@ export default function Navbar() {
               <MobileNavLink href="/search" active={pathname === '/search'} onClick={() => setIsMobileMenuOpen(false)}>Search</MobileNavLink>
               <MobileNavLink href="/dashboard" active={pathname === '/dashboard'} onClick={() => setIsMobileMenuOpen(false)}>Dashboard</MobileNavLink>
               <MobileNavLink href="/govbot" active={pathname === '/govbot'} onClick={() => setIsMobileMenuOpen(false)}>GovBot</MobileNavLink>
+              
+              {user && (
+                <button 
+                  onClick={handleLogout}
+                  className="w-full text-left py-4 text-red-500 font-bold border-t border-slate-50 flex items-center gap-2"
+                >
+                  <LogOut size={18} /> Sign Out
+                </button>
+              )}
             </div>
           </motion.div>
         )}

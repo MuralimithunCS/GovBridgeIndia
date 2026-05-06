@@ -4,17 +4,32 @@ import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { Mail, Lock, ArrowRight, Globe } from 'lucide-react';
+import { auth } from '@/lib/firebase';
+import { signInWithEmailAndPassword } from 'firebase/auth';
 
 export default function LoginPage() {
   const router = useRouter();
   const [loading, setLoading] = useState(false);
+  const [error, setError] = useState('');
+  const [formData, setFormData] = useState({
+    email: '',
+    password: ''
+  });
 
-  const handleDemoLogin = () => {
+  const handleLogin = async (e: React.FormEvent) => {
+    e.preventDefault();
     setLoading(true);
-    // Simulate auth
-    setTimeout(() => {
+    setError('');
+
+    try {
+      await signInWithEmailAndPassword(auth, formData.email, formData.password);
       router.push('/dashboard');
-    }, 1000);
+    } catch (err: any) {
+      console.error("Login error:", err);
+      setError(err.message || "Invalid email or password");
+    } finally {
+      setLoading(false);
+    }
   };
 
   return (
@@ -33,7 +48,13 @@ export default function LoginPage() {
           <h1 className="text-3xl font-black text-slate-900 mb-2">Welcome Back</h1>
           <p className="text-slate-400 text-[15px] font-medium mb-12">Access your personalized benefits portal</p>
 
-          <div className="space-y-6 text-left mb-10">
+          {error && (
+            <div className="mb-6 p-4 bg-red-50 text-red-600 rounded-2xl text-sm font-bold border border-red-100">
+              {error}
+            </div>
+          )}
+
+          <form onSubmit={handleLogin} className="space-y-6 text-left mb-10">
             <div className="space-y-2">
               <label className="text-[11px] font-black text-slate-400 uppercase tracking-widest ml-1">Email Address</label>
               <div className="relative group">
@@ -42,6 +63,9 @@ export default function LoginPage() {
                 </div>
                 <input 
                   type="email" 
+                  required
+                  value={formData.email}
+                  onChange={(e) => setFormData({...formData, email: e.target.value})}
                   placeholder="name@example.com"
                   className="w-full bg-slate-50 border border-slate-100 py-4 pl-14 pr-6 rounded-2xl text-[15px] font-medium placeholder:text-slate-300 outline-none focus:ring-2 focus:ring-[#002f6c]/5 focus:bg-white transition-all"
                 />
@@ -56,20 +80,23 @@ export default function LoginPage() {
                 </div>
                 <input 
                   type="password" 
+                  required
+                  value={formData.password}
+                  onChange={(e) => setFormData({...formData, password: e.target.value})}
                   placeholder="••••••••"
                   className="w-full bg-slate-50 border border-slate-100 py-4 pl-14 pr-6 rounded-2xl text-[15px] font-medium placeholder:text-slate-300 outline-none focus:ring-2 focus:ring-[#002f6c]/5 focus:bg-white transition-all"
                 />
               </div>
             </div>
-          </div>
 
-          <button 
-            onClick={handleDemoLogin}
-            disabled={loading}
-            className="w-full bg-[#001b3d] text-white py-5 rounded-2xl font-black text-[15px] flex items-center justify-center gap-3 hover:bg-slate-900 transition-all shadow-xl shadow-[#001b3d]/10 mb-8"
-          >
-            {loading ? 'Authenticating...' : 'Sign In'} <ArrowRight size={18} />
-          </button>
+            <button 
+              type="submit"
+              disabled={loading}
+              className="w-full bg-[#001b3d] text-white py-5 rounded-2xl font-black text-[15px] flex items-center justify-center gap-3 hover:bg-slate-900 transition-all shadow-xl shadow-[#001b3d]/10 mb-8"
+            >
+              {loading ? 'Authenticating...' : 'Sign In'} <ArrowRight size={18} />
+            </button>
+          </form>
 
           <div className="relative flex items-center gap-4 mb-8">
             <div className="flex-grow h-[1px] bg-slate-100"></div>
