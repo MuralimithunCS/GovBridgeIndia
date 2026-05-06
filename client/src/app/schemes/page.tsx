@@ -1,13 +1,25 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { Search, Filter, ChevronRight, Heart, Home, GraduationCap, Briefcase, TrendingUp, Star, AlertCircle, Shield, Activity, Map, User, Settings } from 'lucide-react';
+import { Search as SearchIcon, Filter, ChevronRight, Heart, Home, GraduationCap, Briefcase, TrendingUp, Shield, Map, User, Star } from 'lucide-react';
 import Link from 'next/link';
 
+// Map UI filters to backend categories (what's stored in Firestore)
+const CATEGORY_MAP: Record<string, string> = {
+  'Agriculture': 'farmer',
+  'Education': 'student',
+  'Healthcare': 'healthcare',
+  'Housing': 'housing',
+  'Employment': 'employment',
+  'Women': 'women',
+  'Insurance': 'insurance',
+  'Business': 'business',
+};
+
 export default function SchemesPage() {
+  const [search, setSearch] = useState('');
   const [schemes, setSchemes] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
-  const [search, setSearch] = useState('');
   const [selectedCategory, setSelectedCategory] = useState('All Categories');
 
   useEffect(() => {
@@ -27,36 +39,54 @@ export default function SchemesPage() {
 
   const filteredSchemes = schemes.filter(s => {
     const matchesSearch = s.name.toLowerCase().includes(search.toLowerCase()) || 
-                         s.description.toLowerCase().includes(search.toLowerCase());
-    const matchesCategory = selectedCategory === 'All Categories' || s.category.toLowerCase() === selectedCategory.toLowerCase();
+                         (s.description && s.description.toLowerCase().includes(search.toLowerCase()));
+                         
+    let matchesCategory = true;
+    if (selectedCategory !== 'All Categories') {
+      const dbCategory = CATEGORY_MAP[selectedCategory];
+      matchesCategory = s.category?.toLowerCase() === dbCategory;
+    }
+    
     return matchesSearch && matchesCategory;
   });
 
   return (
     <div className="min-h-screen bg-slate-50 text-slate-900">
-      <section className="bg-[#002f6c] pt-16 pb-20 px-6 sm:px-12 text-white">
-        <div className="max-w-7xl mx-auto">
-          <h1 className="text-4xl font-black mb-4 tracking-tight">All Government Schemes</h1>
-          <p className="text-slate-300 text-lg mb-10 font-medium">Browse 34+ Central and State government schemes</p>
+      <section className="bg-[#002f6c] pt-16 pb-24 px-6 sm:px-12 text-white relative overflow-hidden">
+        <div className="absolute top-0 right-0 w-96 h-96 bg-white/5 rounded-full blur-[100px] -translate-y-1/2 translate-x-1/2"></div>
+        <div className="max-w-7xl mx-auto relative z-10">
+          <h1 className="text-4xl md:text-5xl font-black mb-4 tracking-tight">Discover Government Schemes</h1>
+          <p className="text-slate-300 text-lg mb-12 font-medium">Browse, filter, and find the right benefits for you</p>
           
-          <div className="relative max-w-3xl">
-            <div className="absolute inset-y-0 left-5 flex items-center text-slate-400">
-              <Search size={22} />
+          <div className="space-y-8">
+            <div className="relative max-w-4xl">
+              <div className="absolute inset-y-0 left-6 flex items-center text-slate-400">
+                <SearchIcon size={24} />
+              </div>
+              <input 
+                type="text" 
+                value={search}
+                onChange={(e) => setSearch(e.target.value)}
+                placeholder="Search schemes, benefits, ministries..."
+                className="w-full bg-white text-slate-900 py-6 pl-16 pr-8 rounded-3xl text-[18px] font-medium placeholder:text-slate-400 outline-none shadow-2xl border-none"
+              />
             </div>
-            <input 
-              type="text" 
-              value={search}
-              onChange={(e) => setSearch(e.target.value)}
-              placeholder="Search schemes, benefits, ministries..."
-              className="w-full bg-white text-slate-900 py-5 pl-14 pr-6 rounded-2xl text-[16px] font-medium placeholder:text-slate-400 outline-none shadow-xl border-none"
-            />
+
+            <div className="flex flex-wrap gap-3">
+              <Pill label="Agriculture" icon={<TrendingUp size={14} />} active={selectedCategory === 'Agriculture'} onClick={() => setSelectedCategory('Agriculture')} />
+              <Pill label="Education" icon={<GraduationCap size={14} />} active={selectedCategory === 'Education'} onClick={() => setSelectedCategory('Education')} />
+              <Pill label="Healthcare" icon={<Heart size={14} />} active={selectedCategory === 'Healthcare'} onClick={() => setSelectedCategory('Healthcare')} />
+              <Pill label="Housing" icon={<Home size={14} />} active={selectedCategory === 'Housing'} onClick={() => setSelectedCategory('Housing')} />
+              <Pill label="Employment" icon={<Briefcase size={14} />} active={selectedCategory === 'Employment'} onClick={() => setSelectedCategory('Employment')} />
+              <Pill label="Women" icon={<Star size={14} />} active={selectedCategory === 'Women'} onClick={() => setSelectedCategory('Women')} />
+            </div>
           </div>
         </div>
       </section>
 
       <main className="max-w-7xl mx-auto px-6 sm:px-12 py-12 flex flex-col lg:grid lg:grid-cols-[280px_1fr] gap-10">
         <aside className="space-y-8">
-          <div>
+          <div className="bg-white rounded-3xl p-6 border border-slate-100 shadow-premium">
             <div className="flex items-center gap-2 text-slate-900 font-bold mb-6 text-[15px]">
               <Filter size={18} className="text-slate-400" />
               <span>Filters</span>
@@ -64,136 +94,150 @@ export default function SchemesPage() {
             
             <div className="space-y-1">
               <p className="text-[11px] font-black uppercase tracking-widest text-slate-400 mb-4 ml-1">Category</p>
-              <FilterItem label="All Categories" active={selectedCategory === 'All Categories'} onClick={() => setSelectedCategory('All Categories')} icon={<Activity size={16} />} />
-              <FilterItem label="Agriculture" active={selectedCategory === 'Agriculture'} onClick={() => setSelectedCategory('Agriculture')} icon={<TrendingUp size={16} />} />
-              <FilterItem label="Education" active={selectedCategory === 'Education'} onClick={() => setSelectedCategory('Education')} icon={<GraduationCap size={16} />} />
-              <FilterItem label="Healthcare" active={selectedCategory === 'Healthcare'} onClick={() => setSelectedCategory('Healthcare')} icon={<Heart size={16} />} />
-              <FilterItem label="Housing" active={selectedCategory === 'Housing'} onClick={() => setSelectedCategory('Housing')} icon={<Home size={16} />} />
-              <FilterItem label="Employment" active={selectedCategory === 'Employment'} onClick={() => setSelectedCategory('Employment')} icon={<Briefcase size={16} />} />
-              <FilterItem label="Women" active={selectedCategory === 'Women'} onClick={() => setSelectedCategory('Women')} icon={<User size={16} />} />
-              <FilterItem label="Insurance" active={selectedCategory === 'Insurance'} onClick={() => setSelectedCategory('Insurance')} icon={<Shield size={16} />} />
-              <FilterItem label="Business" active={selectedCategory === 'Business'} onClick={() => setSelectedCategory('Business')} icon={<Home size={16} />} />
-              <FilterItem label="Pension" active={selectedCategory === 'Pension'} onClick={() => setSelectedCategory('Pension')} icon={<Briefcase size={16} />} />
-              <FilterItem label="Infrastructure" active={selectedCategory === 'Infrastructure'} onClick={() => setSelectedCategory('Infrastructure')} icon={<Home size={16} />} />
-              <FilterItem label="Digital" active={selectedCategory === 'Digital'} onClick={() => setSelectedCategory('Digital')} icon={<Settings size={16} />} />
+              <SidebarItem label="All Categories" active={selectedCategory === 'All Categories'} onClick={() => setSelectedCategory('All Categories')} />
+              <SidebarItem label="Agriculture" active={selectedCategory === 'Agriculture'} onClick={() => setSelectedCategory('Agriculture')} />
+              <SidebarItem label="Education" active={selectedCategory === 'Education'} onClick={() => setSelectedCategory('Education')} />
+              <SidebarItem label="Healthcare" active={selectedCategory === 'Healthcare'} onClick={() => setSelectedCategory('Healthcare')} />
+              <SidebarItem label="Housing" active={selectedCategory === 'Housing'} onClick={() => setSelectedCategory('Housing')} />
+              <SidebarItem label="Employment" active={selectedCategory === 'Employment'} onClick={() => setSelectedCategory('Employment')} />
+              <SidebarItem label="Women" active={selectedCategory === 'Women'} onClick={() => setSelectedCategory('Women')} />
+              <SidebarItem label="Insurance" active={selectedCategory === 'Insurance'} onClick={() => setSelectedCategory('Insurance')} />
+              <SidebarItem label="Business" active={selectedCategory === 'Business'} onClick={() => setSelectedCategory('Business')} />
             </div>
           </div>
         </aside>
 
         <div>
-          <div className="flex items-center justify-between mb-8">
+          <div className="flex items-center justify-between mb-8 px-2">
             <p className="text-[14px] font-bold text-slate-500">
               <span className="text-slate-900">{filteredSchemes.length}</span> schemes found
             </p>
           </div>
 
-          {loading ? (
-            <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6">
-              {[1, 2, 3, 4, 5, 6].map(i => <div key={i} className="h-64 bg-white rounded-3xl animate-pulse border border-slate-100"></div>)}
-            </div>
-          ) : (
-            <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6">
-              {filteredSchemes.map((scheme) => (
-                <SchemeCard key={scheme.id} scheme={scheme} />
-              ))}
-            </div>
-          )}
+          <div className="space-y-4">
+            {loading ? (
+              [1, 2, 3, 4, 5, 6].map(i => <div key={i} className="h-32 bg-white rounded-3xl animate-pulse border border-slate-100"></div>)
+            ) : filteredSchemes.length > 0 ? (
+              filteredSchemes.map((scheme) => (
+                <HorizontalSchemeCard key={scheme.id} scheme={scheme} />
+              ))
+            ) : (
+              <div className="text-center py-20 bg-white rounded-3xl border border-dashed border-slate-200">
+                <SearchIcon size={48} className="mx-auto text-slate-300 mb-4" />
+                <h3 className="text-lg font-black text-slate-800 mb-2">No schemes found</h3>
+                <p className="text-sm text-slate-400 font-medium">Try adjusting your filters or search terms.</p>
+                <button 
+                  onClick={() => { setSearch(''); setSelectedCategory('All Categories'); }}
+                  className="mt-6 text-[#002f6c] font-bold text-sm bg-[#002f6c]/10 px-6 py-2.5 rounded-xl hover:bg-[#002f6c]/20 transition-colors"
+                >
+                  Clear all filters
+                </button>
+              </div>
+            )}
+          </div>
         </div>
       </main>
     </div>
   );
 }
 
-function FilterItem({ label, active, onClick, icon }: any) {
+function Pill({ label, icon, active, onClick }: any) {
+  return (
+    <button 
+      onClick={onClick}
+      className={`flex items-center gap-2 px-5 py-2.5 rounded-full text-[13px] font-bold border transition-all ${
+        active ? 'bg-white text-[#002f6c] border-white' : 'bg-white/5 border-white/20 text-white/70 hover:bg-white/10 hover:text-white'
+      }`}
+    >
+      {icon}
+      {label}
+    </button>
+  );
+}
+
+function SidebarItem({ label, active, onClick }: any) {
   return (
     <button 
       onClick={onClick}
       className={`w-full text-left px-4 py-3 rounded-xl flex items-center justify-between transition-all group ${
-        active ? 'bg-[#002f6c] text-white font-bold shadow-lg shadow-[#002f6c]/10' : 'text-slate-600 hover:bg-slate-100 font-medium'
+        active ? 'bg-[#002f6c] text-white font-bold' : 'text-slate-600 hover:bg-slate-50 font-medium'
       }`}
     >
-      <div className="flex items-center gap-3">
-        {icon && <span className={active ? 'text-white' : 'text-slate-400 group-hover:text-slate-900'}>{icon}</span>}
-        <span className="text-[14px]">{label}</span>
-      </div>
+      <span className="text-[14px]">{label}</span>
       {active && <ChevronRight size={14} className="text-white/50" />}
     </button>
   );
 }
 
-function SchemeCard({ scheme }: any) {
+function HorizontalSchemeCard({ scheme }: any) {
   const isNew = Math.random() > 0.8;
-  const isState = scheme.state_applicable !== 'ALL';
-  
+  const isState = scheme.type === 'state';
+
   const getIcon = (cat: string) => {
     switch (cat?.toLowerCase()) {
-      case 'agriculture': return <TrendingUp className="text-emerald-500" />;
-      case 'healthcare': return <Heart className="text-red-500" />;
-      case 'housing': return <Home className="text-orange-500" />;
-      case 'education': return <GraduationCap className="text-blue-500" />;
-      case 'women': return <User className="text-pink-500" />;
-      case 'insurance': return <Shield className="text-indigo-500" />;
-      case 'business': return <Home className="text-emerald-500" />;
-      default: return <Briefcase className="text-amber-600" />;
+      case 'farmer': return <TrendingUp size={20} className="text-emerald-500" />;
+      case 'healthcare': return <Heart size={20} className="text-red-500" />;
+      case 'housing': return <Home size={20} className="text-orange-500" />;
+      case 'student': return <GraduationCap size={20} className="text-blue-500" />;
+      case 'women': return <User size={20} className="text-pink-500" />;
+      case 'insurance': return <Shield size={20} className="text-indigo-500" />;
+      default: return <Briefcase size={20} className="text-amber-600" />;
     }
   };
 
   const getBg = (cat: string) => {
     switch (cat?.toLowerCase()) {
-      case 'agriculture': return 'bg-emerald-50';
+      case 'farmer': return 'bg-emerald-50';
       case 'healthcare': return 'bg-red-50';
       case 'housing': return 'bg-orange-50';
-      case 'education': return 'bg-blue-50';
+      case 'student': return 'bg-blue-50';
       case 'women': return 'bg-pink-50';
-      case 'insurance': return 'bg-indigo-50';
-      case 'business': return 'bg-emerald-50';
       default: return 'bg-slate-50';
     }
   };
 
   return (
-    <Link href={`/schemes/${scheme.id}`} className="bg-white border border-slate-100 rounded-3xl p-6 flex flex-col justify-between hover:shadow-xl hover:-translate-y-1 transition-all group relative overflow-hidden h-full min-h-[340px]">
-      <div className="flex justify-end gap-2 absolute top-6 right-6 z-10">
-        {isNew && (
-          <div className="px-2 py-0.5 bg-green-50 text-green-600 rounded-lg text-[9px] font-black uppercase tracking-widest border border-green-100">
-            New
-          </div>
-        )}
-        <div className={`px-2.5 py-0.5 rounded-lg text-[9px] font-black uppercase tracking-widest border ${
-          isState ? 'bg-orange-50 text-orange-600 border-orange-100' : 'bg-blue-50 text-blue-600 border-blue-100'
-        }`}>
-          {isState ? 'State' : 'Central'}
-        </div>
+    <Link href={`/schemes/${scheme.id}`} className="bg-white border border-slate-100 rounded-3xl p-6 flex flex-col sm:flex-row items-start sm:items-center gap-6 hover:shadow-xl hover:-translate-x-1 transition-all group border-l-4 border-l-transparent hover:border-l-[#002f6c]">
+      <div className={`w-16 h-16 rounded-2xl flex items-center justify-center shrink-0 ${getBg(scheme.category)} shadow-sm transition-transform group-hover:scale-110`}>
+        {getIcon(scheme.category)}
       </div>
       
-      <div>
-        <div className={`w-12 h-12 rounded-2xl flex items-center justify-center mb-6 ${getBg(scheme.category)} shadow-sm transition-transform group-hover:scale-110`}>
-          {getIcon(scheme.category)}
+      <div className="flex-grow min-w-0 w-full">
+        <div className="flex flex-wrap items-center gap-3 mb-2">
+          <h3 className="text-[18px] font-black text-slate-900 group-hover:text-[#002f6c] transition-colors line-clamp-1">{scheme.name}</h3>
+          {isNew && (
+            <span className="px-2 py-0.5 bg-green-50 text-green-600 rounded-lg text-[9px] font-black uppercase tracking-widest border border-green-100">
+              New
+            </span>
+          )}
+          <span className={`px-2.5 py-0.5 rounded-full text-[10px] font-black uppercase tracking-widest shrink-0 border ${
+            isState ? 'bg-orange-50 text-orange-600 border-orange-100' : 'bg-blue-50 text-blue-600 border-blue-100'
+          }`}>
+            {isState ? 'State' : 'Central'}
+          </span>
         </div>
-        <h3 className="text-[17px] font-black text-slate-900 mb-2 leading-tight group-hover:text-[#002f6c] transition-colors line-clamp-2">{scheme.name}</h3>
-        <p className="text-[12px] text-slate-400 font-medium mb-6 line-clamp-2 leading-relaxed">
+        <div className="flex items-center gap-4 mb-3">
+          <div className="flex items-center gap-1.5 text-slate-400">
+            <Home size={12} />
+            <span className="text-[11px] font-bold uppercase tracking-widest">{isState ? `${scheme.state_applicable} Government` : 'Central Government'}</span>
+          </div>
+          {scheme.state_applicable !== 'all' && (
+            <div className="flex items-center gap-1.5 text-slate-400">
+              <Map size={12} />
+              <span className="text-[11px] font-bold uppercase tracking-widest">{scheme.state_applicable}</span>
+            </div>
+          )}
+        </div>
+        <p className="text-[13px] text-slate-500 font-medium line-clamp-2 leading-relaxed max-w-3xl">
           {scheme.description}
         </p>
-
-        <div className="space-y-1 mb-6">
-          <div className="flex items-center gap-2">
-            <Home size={12} className="text-slate-300" />
-            <span className="text-[10px] font-bold text-slate-400 uppercase tracking-widest truncate">
-              {scheme.state_applicable === 'ALL' ? 'Central Government' : `${scheme.state_applicable} Government`}
-            </span>
-          </div>
-          <div className="flex items-center gap-2">
-            <Map size={12} className="text-slate-300" />
-            <span className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">{scheme.state_applicable}</span>
-          </div>
-        </div>
       </div>
 
-      <div className="pt-6 border-t border-slate-50 flex items-center justify-between">
-        <span className="text-[13px] font-black text-orange-500">
-          {scheme.benefits?.split('.')[0].substring(0, 40)}
-        </span>
-        <ChevronRight size={18} className="text-slate-200 group-hover:text-[#002f6c] transition-colors" />
+      <div className="text-left sm:text-right shrink-0 mt-4 sm:mt-0 w-full sm:w-auto border-t border-slate-50 sm:border-0 pt-4 sm:pt-0">
+        <p className="text-[13px] font-black text-orange-500 mb-1">{scheme.benefits?.split('.')[0].substring(0, 40)}{scheme.benefits?.split('.')[0].length > 40 ? '...' : ''}</p>
+        <div className="flex justify-end text-slate-200 group-hover:text-[#002f6c] transition-colors mt-2">
+          <ChevronRight size={24} />
+        </div>
       </div>
     </Link>
   );

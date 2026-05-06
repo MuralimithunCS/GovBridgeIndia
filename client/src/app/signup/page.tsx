@@ -7,6 +7,17 @@ import { Mail, Lock, User, ArrowRight, Globe } from 'lucide-react';
 import { auth } from '@/lib/firebase';
 import { createUserWithEmailAndPassword, updateProfile } from 'firebase/auth';
 
+function getErrorMessage(code: string): string {
+  switch (code) {
+    case 'auth/network-request-failed': return 'Network error. Please check your internet connection and try again.';
+    case 'auth/email-already-in-use': return 'This email is already registered. Try logging in instead.';
+    case 'auth/weak-password': return 'Password must be at least 6 characters long.';
+    case 'auth/invalid-email': return 'Please enter a valid email address.';
+    case 'auth/too-many-requests': return 'Too many attempts. Please wait a moment and try again.';
+    default: return 'Something went wrong. Please try again.';
+  }
+}
+
 export default function SignupPage() {
   const router = useRouter();
   const [loading, setLoading] = useState(false);
@@ -37,7 +48,7 @@ export default function SignupPage() {
       router.push('/dashboard');
     } catch (err: any) {
       console.error("Signup error:", err);
-      setError(err.message || "Failed to create account");
+      setError(getErrorMessage(err.code));
     } finally {
       setLoading(false);
     }

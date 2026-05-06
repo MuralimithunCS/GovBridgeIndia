@@ -7,6 +7,7 @@ import { Globe, Menu, X, LogOut } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { auth } from '@/lib/firebase';
 import { onAuthStateChanged, signOut } from 'firebase/auth';
+import GoogleTranslate from './GoogleTranslate';
 
 export default function Navbar() {
   const pathname = usePathname();
@@ -40,15 +41,13 @@ export default function Navbar() {
 
         <div className="hidden lg:flex items-center gap-8">
           <NavLink href="/schemes" active={pathname.startsWith('/schemes')}>Schemes</NavLink>
-          <NavLink href="/search" active={pathname === '/search'}>Search</NavLink>
           <NavLink href="/dashboard" active={pathname === '/dashboard'}>Dashboard</NavLink>
           <NavLink href="/govbot" active={pathname === '/govbot'}>GovBot</NavLink>
         </div>
 
         <div className="flex items-center gap-4">
-          <div className="hidden md:flex items-center gap-2 text-[13px] font-bold text-slate-500 cursor-pointer hover:text-slate-900">
-            <Globe size={16} />
-            <span>English</span>
+          <div className="hidden md:block">
+            <GoogleTranslate />
           </div>
           
           {user ? (
@@ -89,7 +88,6 @@ export default function Navbar() {
           >
             <div className="flex flex-col p-6 space-y-2">
               <MobileNavLink href="/schemes" active={pathname.startsWith('/schemes')} onClick={() => setIsMobileMenuOpen(false)}>Schemes</MobileNavLink>
-              <MobileNavLink href="/search" active={pathname === '/search'} onClick={() => setIsMobileMenuOpen(false)}>Search</MobileNavLink>
               <MobileNavLink href="/dashboard" active={pathname === '/dashboard'} onClick={() => setIsMobileMenuOpen(false)}>Dashboard</MobileNavLink>
               <MobileNavLink href="/govbot" active={pathname === '/govbot'} onClick={() => setIsMobileMenuOpen(false)}>GovBot</MobileNavLink>
               

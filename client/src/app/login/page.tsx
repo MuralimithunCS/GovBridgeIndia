@@ -7,6 +7,18 @@ import { Mail, Lock, ArrowRight, Globe } from 'lucide-react';
 import { auth } from '@/lib/firebase';
 import { signInWithEmailAndPassword } from 'firebase/auth';
 
+function getErrorMessage(code: string): string {
+  switch (code) {
+    case 'auth/network-request-failed': return 'Network error. Please check your internet connection and try again.';
+    case 'auth/wrong-password': return 'Incorrect password. Please try again.';
+    case 'auth/user-not-found': return 'No account found with this email. Try signing up.';
+    case 'auth/invalid-email': return 'Please enter a valid email address.';
+    case 'auth/invalid-credential': return 'Invalid email or password. Please try again.';
+    case 'auth/too-many-requests': return 'Too many attempts. Please wait a moment and try again.';
+    default: return 'Something went wrong. Please try again.';
+  }
+}
+
 export default function LoginPage() {
   const router = useRouter();
   const [loading, setLoading] = useState(false);
@@ -26,7 +38,7 @@ export default function LoginPage() {
       router.push('/dashboard');
     } catch (err: any) {
       console.error("Login error:", err);
-      setError(err.message || "Invalid email or password");
+      setError(getErrorMessage(err.code));
     } finally {
       setLoading(false);
     }
