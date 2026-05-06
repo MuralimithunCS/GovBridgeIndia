@@ -1,4 +1,4 @@
-const User = require('../models/User');
+const { db } = require('../config/firebaseAdmin');
 
 // @desc    Create or update user profile
 // @route   POST /api/user/profile
@@ -11,32 +11,19 @@ exports.createOrUpdateProfile = async (req, res) => {
     } = req.body;
     
     const firebase_uid = req.user.uid;
+    const userRef = db.collection('users').doc(firebase_uid);
 
-    let user = await User.findOne({ firebase_uid });
-
-    if (user) {
-      // Update
-      user = await User.findOneAndUpdate(
-        { firebase_uid },
-        { $set: { 
-            name, age, gender, state, district, occupation, income, 
-            category, education, disability, marital_status, rural_urban 
-          } 
-        },
-        { new: true }
-      );
-      return res.json({ message: 'Profile updated successfully', user });
-    }
-
-    // Create
-    user = new User({
+    const profileData = {
       firebase_uid,
       name, age, gender, state, district, occupation, income, 
-      category, education, disability, marital_status, rural_urban
-    });
+      category, education, disability, marital_status, rural_urban,
+      updatedAt: new Date().toISOString()
+    };
 
-    await user.save();
-    res.status(201).json({ message: 'Profile created successfully', user });
+    await userRef.set(profileData, { merge: true });
+    
+    const updatedDoc = await userRef.get();
+    res.json({ message: 'Profile saved successfully', user: updatedDoc.data() });
 
   } catch (error) {
     console.error('Error in createOrUpdateProfile:', error.message);
@@ -49,13 +36,13 @@ exports.createOrUpdateProfile = async (req, res) => {
 // @access  Private
 exports.getProfile = async (req, res) => {
   try {
-    const user = await User.findOne({ firebase_uid: req.user.uid });
+    const doc = await db.collection('users').doc(req.user.uid).get();
 
-    if (!user) {
+    if (!doc.exists) {
       return res.status(404).json({ error: 'Profile not found' });
     }
 
-    res.json(user);
+    res.json(doc.data());
   } catch (error) {
     console.error('Error in getProfile:', error.message);
     res.status(500).json({ error: 'Server error' });

@@ -60,13 +60,11 @@ app.use((err, req, res, next) => {
 });
 
 const startServer = async () => {
-  await connectDB();
   await seedSchemes();
   app.listen(PORT, () => {
-    console.log(`Server is running on port ${PORT}`);// Trigger re-seed
+    console.log(`Server is running on port ${PORT}`);
   });
 };
 
 startServer();
-// Trigger restart
 

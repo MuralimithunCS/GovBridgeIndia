@@ -1,6 +1,7 @@
-const Scheme = require('../models/Scheme');
+const { db } = require('../config/firebaseAdmin');
 
 const schemes = [
+  // ... (keeping the same schemes array)
   {
     name: "PM Kisan Samman Nidhi",
     description: "Financial assistance to landholding farmer families across the country.",
@@ -368,16 +369,25 @@ const schemes = [
 
 const seedSchemes = async () => {
   try {
-    const count = await Scheme.countDocuments();
-    if (count === 0) {
-      console.log('Database is empty. Seeding schemes...');
-      await Scheme.insertMany(schemes);
-      console.log(`Successfully seeded ${schemes.length} schemes.`);
+    const schemesCol = db.collection('schemes');
+    const snapshot = await schemesCol.limit(1).get();
+    
+    if (snapshot.empty) {
+      console.log('Firestore is empty. Seeding schemes...');
+      const batch = db.batch();
+      
+      schemes.forEach((scheme) => {
+        const docRef = schemesCol.doc(); // Auto-generate ID
+        batch.set(docRef, scheme);
+      });
+      
+      await batch.commit();
+      console.log(`Successfully seeded ${schemes.length} schemes to Firestore.`);
     } else {
-      console.log(`Database already has ${count} schemes. Skipping seed.`);
+      console.log(`Firestore already has schemes. Skipping seed.`);
     }
   } catch (error) {
-    console.error('Error seeding schemes:', error.message);
+    console.error('Error seeding schemes to Firestore:', error.message);
   }
 };
 

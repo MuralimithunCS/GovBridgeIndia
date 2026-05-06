@@ -1,4 +1,4 @@
-const Scheme = require('../models/Scheme');
+const { db } = require('../config/firebaseAdmin');
 
 // @desc    Get all schemes
 // @route   GET /api/schemes
@@ -6,13 +6,28 @@ const Scheme = require('../models/Scheme');
 exports.getAllSchemes = async (req, res) => {
   try {
     const { category, state, type } = req.query;
-    let query = {};
+    let schemesRef = db.collection('schemes');
+    let query = schemesRef;
 
-    if (category) query.category = category;
-    if (state) query.state_applicable = { $in: [state, 'all', 'All'] };
-    if (type) query.type = type;
+    if (category) {
+      query = query.where('category', '==', category);
+    }
+    
+    if (type) {
+      query = query.where('type', '==', type);
+    }
 
-    const schemes = await Scheme.find(query).sort({ createdAt: -1 });
+    const snapshot = await query.get();
+    let schemes = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+
+    // Post-filter for state since Firestore doesn't support $in with 'all' easily in one where
+    if (state) {
+      schemes = schemes.filter(s => 
+        s.state_applicable === state || 
+        s.state_applicable?.toLowerCase() === 'all'
+      );
+    }
+
     res.json(schemes);
   } catch (error) {
     console.error('Error in getAllSchemes:', error.message);
@@ -25,11 +40,11 @@ exports.getAllSchemes = async (req, res) => {
 // @access  Public
 exports.getSchemeById = async (req, res) => {
   try {
-    const scheme = await Scheme.findById(req.params.id);
-    if (!scheme) {
+    const doc = await db.collection('schemes').doc(req.params.id).get();
+    if (!doc.exists) {
       return res.status(404).json({ error: 'Scheme not found' });
     }
-    res.json(scheme);
+    res.json({ id: doc.id, ...doc.data() });
   } catch (error) {
     console.error('Error in getSchemeById:', error.message);
     res.status(500).json({ error: 'Server error' });
@@ -41,9 +56,9 @@ exports.getSchemeById = async (req, res) => {
 // @access  Public (for now)
 exports.createScheme = async (req, res) => {
   try {
-    const scheme = new Scheme(req.body);
-    await scheme.save();
-    res.status(201).json(scheme);
+    const docRef = await db.collection('schemes').add(req.body);
+    const newDoc = await docRef.get();
+    res.status(201).json({ id: newDoc.id, ...newDoc.data() });
   } catch (error) {
     console.error('Error in createScheme:', error.message);
     res.status(500).json({ error: 'Server error' });

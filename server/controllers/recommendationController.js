@@ -1,5 +1,4 @@
-const User = require('../models/User');
-const Scheme = require('../models/Scheme');
+const { db } = require('../config/firebaseAdmin');
 const matchSchemes = require('../utils/matchEngine');
 
 // @desc    Get personalized scheme recommendations
@@ -9,14 +8,16 @@ exports.getRecommendations = async (req, res) => {
   try {
     const firebase_uid = req.user.uid;
     
-    // 1. Fetch user profile
-    const user = await User.findOne({ firebase_uid });
-    if (!user) {
+    // 1. Fetch user profile from Firestore
+    const userDoc = await db.collection('users').doc(firebase_uid).get();
+    if (!userDoc.exists) {
       return res.status(404).json({ error: 'User profile not found. Please complete your profile first.' });
     }
+    const user = userDoc.data();
 
-    // 2. Fetch all schemes
-    const schemes = await Scheme.find({});
+    // 2. Fetch all schemes from Firestore
+    const schemesSnapshot = await db.collection('schemes').get();
+    const schemes = schemesSnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
 
     // 3. Match
     const recommendations = matchSchemes(user, schemes);
