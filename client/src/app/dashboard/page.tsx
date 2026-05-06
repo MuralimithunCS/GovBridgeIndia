@@ -82,7 +82,7 @@ export default function DashboardPage() {
                 [1, 2, 3].map(i => <div key={i} className="h-24 bg-slate-50 rounded-2xl animate-pulse"></div>)
               ) : (
                 schemes.map((scheme) => (
-                  <Link key={scheme._id} href={`/schemes/${scheme._id}`} className="flex items-center gap-5 p-5 rounded-2xl border border-slate-50 hover:bg-slate-50 hover:border-slate-100 transition-all group">
+                  <Link key={scheme.id} href={`/schemes/${scheme.id}`} className="flex items-center gap-5 p-5 rounded-2xl border border-slate-50 hover:bg-slate-50 hover:border-slate-100 transition-all group">
                     <div className="w-12 h-12 bg-red-50 rounded-xl flex items-center justify-center shrink-0">
                       <Heart className="text-red-500" size={20} />
                     </div>

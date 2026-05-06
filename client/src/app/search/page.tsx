@@ -112,7 +112,7 @@ export default function SearchPage() {
               [1, 2, 3, 4].map(i => <div key={i} className="h-32 bg-white rounded-3xl animate-pulse border border-slate-100"></div>)
             ) : (
               filteredSchemes.map((scheme) => (
-                <HorizontalSchemeCard key={scheme._id} scheme={scheme} />
+                <HorizontalSchemeCard key={scheme.id} scheme={scheme} />
               ))
             )}
           </div>
@@ -178,7 +178,7 @@ function HorizontalSchemeCard({ scheme }: any) {
   };
 
   return (
-    <Link href={`/schemes/${scheme._id}`} className="bg-white border border-slate-100 rounded-3xl p-6 flex items-center gap-6 hover:shadow-xl hover:-translate-x-1 transition-all group border-l-4 border-l-transparent hover:border-l-[#002f6c]">
+    <Link href={`/schemes/${scheme.id}`} className="bg-white border border-slate-100 rounded-3xl p-6 flex items-center gap-6 hover:shadow-xl hover:-translate-x-1 transition-all group border-l-4 border-l-transparent hover:border-l-[#002f6c]">
       <div className={`w-16 h-16 rounded-2xl flex items-center justify-center shrink-0 ${getBg(scheme.category)} shadow-sm transition-transform group-hover:scale-110`}>
         {getIcon(scheme.category)}
       </div>

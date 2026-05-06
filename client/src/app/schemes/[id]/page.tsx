@@ -22,7 +22,7 @@ export default function SchemeDetailPage() {
         // Fetch related schemes
         const relRes = await fetch('http://localhost:5000/api/schemes');
         const relData = await relRes.json();
-        setRelatedSchemes(relData.filter((s: any) => s._id !== params.id && s.category === data.category).slice(0, 3));
+        setRelatedSchemes(relData.filter((s: any) => s.id !== params.id && s.category === data.category).slice(0, 3));
       } catch (err) {
         console.error("Error fetching scheme:", err);
       } finally {
@@ -186,7 +186,7 @@ export default function SchemeDetailPage() {
               <h3 className="text-[16px] font-black ml-1">Related Schemes</h3>
               <div className="space-y-4">
                 {relatedSchemes.map((s: any) => (
-                  <Link key={s._id} href={`/schemes/${s._id}`} className="block bg-white p-5 rounded-2xl border border-slate-100 hover:shadow-lg transition-all group">
+                  <Link key={s.id} href={`/schemes/${s.id}`} className="block bg-white p-5 rounded-2xl border border-slate-100 hover:shadow-lg transition-all group">
                     <div className="flex items-center gap-3 mb-2">
                       <div className={`w-8 h-8 rounded-lg flex items-center justify-center text-xs ${getBg(s.category)}`}>
                         {getIcon(s.category)}

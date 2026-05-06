@@ -94,7 +94,7 @@ export default function SchemesPage() {
           ) : (
             <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6">
               {filteredSchemes.map((scheme) => (
-                <SchemeCard key={scheme._id} scheme={scheme} />
+                <SchemeCard key={scheme.id} scheme={scheme} />
               ))}
             </div>
           )}
@@ -152,7 +152,7 @@ function SchemeCard({ scheme }: any) {
   };
 
   return (
-    <Link href={`/schemes/${scheme._id}`} className="bg-white border border-slate-100 rounded-3xl p-6 flex flex-col justify-between hover:shadow-xl hover:-translate-y-1 transition-all group relative overflow-hidden h-full min-h-[340px]">
+    <Link href={`/schemes/${scheme.id}`} className="bg-white border border-slate-100 rounded-3xl p-6 flex flex-col justify-between hover:shadow-xl hover:-translate-y-1 transition-all group relative overflow-hidden h-full min-h-[340px]">
       <div className="flex justify-end gap-2 absolute top-6 right-6 z-10">
         {isNew && (
           <div className="px-2 py-0.5 bg-green-50 text-green-600 rounded-lg text-[9px] font-black uppercase tracking-widest border border-green-100">
