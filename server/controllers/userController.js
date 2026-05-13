@@ -20,6 +20,13 @@ exports.createOrUpdateProfile = async (req, res) => {
       updatedAt: new Date().toISOString()
     };
 
+    // Remove undefined fields so Firestore doesn't crash
+    Object.keys(profileData).forEach(key => {
+      if (profileData[key] === undefined) {
+        delete profileData[key];
+      }
+    });
+
     await userRef.set(profileData, { merge: true });
     
     const updatedDoc = await userRef.get();
@@ -45,6 +52,40 @@ exports.getProfile = async (req, res) => {
     res.json(doc.data());
   } catch (error) {
     console.error('Error in getProfile:', error.message);
+    res.status(500).json({ error: 'Server error' });
+  }
+};
+
+// @desc    Apply for a scheme (mark as applied)
+// @route   POST /api/user/apply
+// @access  Private
+exports.applyForScheme = async (req, res) => {
+  try {
+    const { schemeId, schemeName } = req.body;
+    const firebase_uid = req.user.uid;
+    const userRef = db.collection('users').doc(firebase_uid);
+
+    const doc = await userRef.get();
+    let applied_schemes = [];
+    
+    if (doc.exists && doc.data().applied_schemes) {
+      applied_schemes = doc.data().applied_schemes;
+    }
+
+    // Check if already applied
+    if (!applied_schemes.find(s => s.schemeId === schemeId)) {
+      applied_schemes.push({
+        schemeId,
+        schemeName,
+        appliedAt: new Date().toISOString()
+      });
+
+      await userRef.set({ applied_schemes }, { merge: true });
+    }
+
+    res.json({ message: 'Marked as applied successfully', applied_schemes });
+  } catch (error) {
+    console.error('Error in applyForScheme:', error.message);
     res.status(500).json({ error: 'Server error' });
   }
 };

@@ -2,8 +2,10 @@
 
 import { useState, useEffect } from 'react';
 import { useParams, useRouter } from 'next/navigation';
-import { ChevronLeft, ExternalLink, Share2, CheckCircle2, AlertCircle, FileText, Info, ArrowRight, TrendingUp, Heart, Home, GraduationCap, Briefcase } from 'lucide-react';
+import { ChevronLeft, ExternalLink, Share2, CheckCircle2, AlertCircle, FileText, Info, ArrowRight, TrendingUp, Heart, Home, GraduationCap, Briefcase, Check } from 'lucide-react';
 import Link from 'next/link';
+import { auth } from '@/lib/firebase';
+import { onAuthStateChanged } from 'firebase/auth';
 
 export default function SchemeDetailPage() {
   const params = useParams();
@@ -11,16 +13,44 @@ export default function SchemeDetailPage() {
   const [scheme, setScheme] = useState<any>(null);
   const [loading, setLoading] = useState(true);
   const [relatedSchemes, setRelatedSchemes] = useState<any[]>([]);
+  const [user, setUser] = useState<any>(null);
+  const [isApplied, setIsApplied] = useState(false);
+  const [applying, setApplying] = useState(false);
+
+  useEffect(() => {
+    const unsubscribe = onAuthStateChanged(auth, async (firebaseUser) => {
+      setUser(firebaseUser);
+      if (firebaseUser) {
+        // check if already applied
+        try {
+          const token = await firebaseUser.getIdToken();
+          const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000';
+          const res = await fetch(`${apiUrl}/api/user/profile`, {
+            headers: { 'Authorization': `Bearer ${token}` }
+          });
+          if (res.ok) {
+            const data = await res.json();
+            if (data.applied_schemes?.find((s: any) => s.schemeId === params.id)) {
+              setIsApplied(true);
+            }
+          }
+        } catch(e) {}
+      }
+    });
+
+    return () => unsubscribe();
+  }, [params.id]);
 
   useEffect(() => {
     const fetchScheme = async () => {
       try {
-        const res = await fetch(`http://localhost:5000/api/schemes/${params.id}`);
+        const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000';
+        const res = await fetch(`${apiUrl}/api/schemes/${params.id}`);
         const data = await res.json();
         setScheme(data);
 
         // Fetch related schemes
-        const relRes = await fetch('http://localhost:5000/api/schemes');
+        const relRes = await fetch(`${apiUrl}/api/schemes`);
         const relData = await relRes.json();
         setRelatedSchemes(relData.filter((s: any) => s.id !== params.id && s.category === data.category).slice(0, 3));
       } catch (err) {
@@ -31,6 +61,38 @@ export default function SchemeDetailPage() {
     };
     fetchScheme();
   }, [params.id]);
+
+  const handleApply = async () => {
+    if (!user) {
+      router.push('/login');
+      return;
+    }
+
+    if (isApplied) {
+      window.open(scheme.apply_link, '_blank');
+      return;
+    }
+
+    setApplying(true);
+    try {
+      const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000';
+      await fetch(`${apiUrl}/api/user/apply`, {
+        method: 'POST',
+        headers: { 
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}` 
+        },
+        body: JSON.stringify({ schemeId: scheme.id, schemeName: scheme.name })
+      });
+      setIsApplied(true);
+      window.open(scheme.apply_link, '_blank');
+    } catch (e) {
+      console.error(e);
+      window.open(scheme.apply_link, '_blank');
+    } finally {
+      setApplying(false);
+    }
+  };
 
   if (loading) return <div className="p-20 text-center font-bold text-slate-400 animate-pulse">Loading Scheme Details...</div>;
   if (!scheme) return <div className="p-20 text-center font-bold text-red-500">Scheme not found.</div>;
@@ -102,13 +164,17 @@ export default function SchemeDetailPage() {
                 <p className="text-slate-500 text-[16px] leading-relaxed font-medium">
                   {scheme.description}
                 </p>
-                <a 
-                  href={scheme.apply_link} 
-                  target="_blank" 
-                  className="inline-flex items-center justify-center gap-3 bg-[#002f6c] text-white py-5 px-10 rounded-2xl font-black text-[15px] hover:bg-slate-900 transition-all shadow-lg shadow-[#002f6c]/20 w-full sm:w-auto"
+                <button 
+                  onClick={handleApply}
+                  disabled={applying}
+                  className={`inline-flex items-center justify-center gap-3 py-5 px-10 rounded-2xl font-black text-[15px] transition-all shadow-lg w-full sm:w-auto ${
+                    isApplied 
+                      ? 'bg-green-500 text-white shadow-green-500/20 hover:bg-green-600' 
+                      : 'bg-[#002f6c] text-white shadow-[#002f6c]/20 hover:bg-slate-900'
+                  }`}
                 >
-                  Apply Online <ExternalLink size={18} />
-                </a>
+                  {applying ? 'Tracking...' : isApplied ? 'Applied ✓ (Open Portal)' : 'Apply Online'} <ExternalLink size={18} />
+                </button>
               </div>
             </div>
 
@@ -173,13 +239,15 @@ export default function SchemeDetailPage() {
               <p className="text-slate-400 text-[14px] mb-8 relative z-10 leading-relaxed">
                 Click below to go to the official government portal and submit your application.
               </p>
-              <a 
-                href={scheme.apply_link} 
-                target="_blank" 
-                className="w-full bg-orange-500 text-white py-4 rounded-xl font-black text-[14px] flex items-center justify-center gap-2 hover:bg-orange-600 transition-all shadow-lg shadow-orange-500/20"
+              <button 
+                onClick={handleApply}
+                disabled={applying}
+                className={`w-full text-white py-4 rounded-xl font-black text-[14px] flex items-center justify-center gap-2 transition-all shadow-lg ${
+                  isApplied ? 'bg-green-500 hover:bg-green-600 shadow-green-500/20' : 'bg-orange-500 hover:bg-orange-600 shadow-orange-500/20'
+                }`}
               >
-                Official Portal <ExternalLink size={16} />
-              </a>
+                {applying ? 'Tracking...' : isApplied ? 'Applied ✓' : 'Official Portal'} <ExternalLink size={16} />
+              </button>
             </div>
 
             <div className="space-y-6">

@@ -37,8 +37,10 @@ export default function DashboardPage() {
     try {
       const token = await firebaseUser.getIdToken();
       
+      const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000';
+      
       // Fetch Profile
-      const profileRes = await fetch('http://localhost:5000/api/user/profile', {
+      const profileRes = await fetch(`${apiUrl}/api/user/profile`, {
         headers: { 'Authorization': `Bearer ${token}` }
       });
       
@@ -51,7 +53,7 @@ export default function DashboardPage() {
       }
 
       // Fetch Recommendations
-      const recRes = await fetch('http://localhost:5000/api/recommendations', {
+      const recRes = await fetch(`${apiUrl}/api/recommendations`, {
         headers: { 'Authorization': `Bearer ${token}` }
       });
       
@@ -62,7 +64,7 @@ export default function DashboardPage() {
       }
 
       // Fetch All Schemes for count
-      const schemesRes = await fetch('http://localhost:5000/api/schemes');
+      const schemesRes = await fetch(`${apiUrl}/api/schemes`);
       if (schemesRes.ok) {
         const schemesData = await schemesRes.json();
         const centralCount = schemesData.filter((s: any) => s.type?.toLowerCase() === 'central').length;
@@ -158,52 +160,69 @@ export default function DashboardPage() {
                   </div>
                   <h3 className="text-lg font-black text-slate-800 mb-2">Complete Your Profile</h3>
                   <p className="text-sm text-slate-400 font-medium mb-6">Update your details to see which government schemes you are eligible for.</p>
-                  <Link href="/search" className="bg-[#002f6c] text-white px-6 py-3 rounded-xl font-black text-xs uppercase tracking-widest shadow-lg shadow-[#002f6c]/20 hover:bg-slate-900 transition-all">
+                  <Link href="/profile" className="bg-[#002f6c] text-white px-6 py-3 rounded-xl font-black text-xs uppercase tracking-widest shadow-lg shadow-[#002f6c]/20 hover:bg-slate-900 transition-all">
                     Update Profile
                   </Link>
                 </div>
               ) : (
-                recommendations.map((scheme) => (
-                  <Link key={scheme.id} href={`/schemes/${scheme.id}`} className="flex items-center gap-5 p-5 rounded-2xl border border-slate-50 hover:bg-slate-50 hover:border-slate-100 transition-all group">
-                    <div className="w-12 h-12 bg-red-50 rounded-xl flex items-center justify-center shrink-0">
-                      <Heart className="text-red-500" size={20} />
-                    </div>
-                    <div className="flex-grow min-w-0">
-                      <h3 className="text-[16px] font-black text-slate-800 group-hover:text-[#002f6c] truncate">{scheme.name}</h3>
-                      <p className="text-[12px] font-bold text-slate-400 mt-1 line-clamp-1">{scheme.benefits?.split('.')[0]}</p>
-                      <div className="flex items-center gap-2 mt-2">
-                        <div className="w-4 h-4 bg-success/10 rounded-full flex items-center justify-center text-success">
-                          <Check size={10} />
-                        </div>
-                        <p className="text-[11px] font-bold text-slate-400">Matched based on {scheme.category}</p>
+                recommendations.map((item, index) => {
+                  const scheme = item.scheme || item; // Fallback in case backend structure changes
+                  return (
+                    <Link key={scheme.id || index} href={`/schemes/${scheme.id}`} className="flex items-center gap-5 p-5 rounded-2xl border border-slate-50 hover:bg-slate-50 hover:border-slate-100 transition-all group">
+                      <div className="w-12 h-12 bg-red-50 rounded-xl flex items-center justify-center shrink-0">
+                        <Heart className="text-red-500" size={20} />
                       </div>
-                    </div>
-                    <ChevronRight size={18} className="text-slate-200 group-hover:text-slate-400" />
-                  </Link>
-                ))
+                      <div className="flex-grow min-w-0">
+                        <h3 className="text-[16px] font-black text-slate-800 group-hover:text-[#002f6c] truncate">{scheme.name}</h3>
+                        <p className="text-[12px] font-bold text-slate-400 mt-1 line-clamp-1">{scheme.benefits?.split('.')[0]}</p>
+                        <div className="flex items-center gap-2 mt-2">
+                          <div className="w-4 h-4 bg-success/10 rounded-full flex items-center justify-center text-success">
+                            <Check size={10} />
+                          </div>
+                          <p className="text-[11px] font-bold text-slate-400">Matched based on {scheme.category}</p>
+                        </div>
+                      </div>
+                      <ChevronRight size={18} className="text-slate-200 group-hover:text-slate-400" />
+                    </Link>
+                  );
+                })
               )}
             </div>
           </div>
 
           <div className="bg-white rounded-[32px] p-8 border border-slate-100 shadow-premium">
-            <div className="flex items-center gap-3 mb-8">
-              <div className="w-10 h-10 bg-indigo-50 rounded-xl flex items-center justify-center text-indigo-600">
-                <Bell size={20} />
+            <div className="flex items-center justify-between mb-8">
+              <div className="flex items-center gap-3">
+                <div className="w-10 h-10 bg-indigo-50 rounded-xl flex items-center justify-center text-indigo-600">
+                  <Briefcase size={20} />
+                </div>
+                <h2 className="text-xl font-black">Applied Schemes</h2>
               </div>
-              <h2 className="text-xl font-black">Alerts & Deadlines</h2>
             </div>
 
-            <div className="space-y-6">
-              <AlertItem 
-                title="PM Kisan 19th Installment" 
-                desc="Next installment expected in April 2025. Ensure your Aadhaar is linked to your bank account."
-                color="blue"
-              />
-              <AlertItem 
-                title="Ayushman Bharat Card" 
-                desc="New beneficiaries can now apply. Check if your family is included in SECC database."
-                color="green"
-              />
+            <div className="space-y-4">
+              {profile?.applied_schemes && profile.applied_schemes.length > 0 ? (
+                profile.applied_schemes.map((applied: any, index: number) => (
+                  <div key={index} className="flex items-start gap-4 p-4 rounded-2xl bg-slate-50 border border-slate-100">
+                    <div className="w-10 h-10 bg-green-50 text-green-600 rounded-xl flex items-center justify-center shrink-0">
+                      <Check size={18} />
+                    </div>
+                    <div>
+                      <h4 className="text-[14px] font-black text-slate-800 mb-1 leading-tight">{applied.schemeName}</h4>
+                      <p className="text-[11px] text-slate-400 font-black uppercase tracking-widest">
+                        Applied on {new Date(applied.appliedAt).toLocaleDateString()}
+                      </p>
+                    </div>
+                  </div>
+                ))
+              ) : (
+                <div className="p-6 text-center bg-slate-50 rounded-2xl border border-dashed border-slate-200">
+                  <p className="text-[13px] font-bold text-slate-400 mb-4">You haven't tracked any scheme applications yet.</p>
+                  <Link href="/schemes" className="text-[11px] font-black uppercase tracking-widest text-[#002f6c] hover:underline">
+                    Browse Schemes →
+                  </Link>
+                </div>
+              )}
             </div>
           </div>
         </div>
