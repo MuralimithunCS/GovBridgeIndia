@@ -23,6 +23,10 @@ export default function ProfilePage() {
     occupation: 'Farmer',
     income: '',
     category: 'General',
+    education: 'Secondary (10th)',
+    disability: 'No',
+    marital_status: 'Single',
+    rural_urban: 'Rural'
   });
 
   useEffect(() => {
@@ -39,6 +43,7 @@ export default function ProfilePage() {
 
   const fetchProfile = async (firebaseUser: any) => {
     try {
+      const token = await firebaseUser.getIdToken();
       const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000';
       const res = await fetch(`${apiUrl}/api/user/profile`, {
         headers: { 'Authorization': `Bearer ${token}` }
@@ -55,6 +60,10 @@ export default function ProfilePage() {
           occupation: data.occupation || 'Farmer',
           income: data.income || '',
           category: data.category || 'General',
+          education: data.education || 'Secondary (10th)',
+          disability: data.disability || 'No',
+          marital_status: data.marital_status || 'Single',
+          rural_urban: data.rural_urban || 'Rural'
         });
       } else {
         setFormData(prev => ({ ...prev, name: firebaseUser.displayName || '' }));
@@ -176,6 +185,41 @@ export default function ProfilePage() {
               <div className="space-y-2">
                 <label className="text-[11px] font-black uppercase tracking-widest text-slate-400 ml-1">Annual Income (₹)</label>
                 <input required type="number" name="income" value={formData.income} onChange={handleChange} className="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-3 text-sm font-bold text-slate-900 outline-none focus:border-[#002f6c] focus:ring-1 focus:ring-[#002f6c] transition-all" />
+              </div>
+
+              {/* Additional Details */}
+              <div className="space-y-2">
+                <label className="text-[11px] font-black uppercase tracking-widest text-slate-400 ml-1">Education</label>
+                <select name="education" value={formData.education} onChange={handleChange} className="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-3 text-sm font-bold text-slate-900 outline-none focus:border-[#002f6c] focus:ring-1 focus:ring-[#002f6c] transition-all">
+                  <option value="Below 10th">Below 10th</option>
+                  <option value="Secondary (10th)">Secondary (10th)</option>
+                  <option value="Higher Secondary (12th)">Higher Secondary (12th)</option>
+                  <option value="Graduate">Graduate</option>
+                  <option value="Post Graduate">Post Graduate</option>
+                </select>
+              </div>
+              <div className="space-y-2">
+                <label className="text-[11px] font-black uppercase tracking-widest text-slate-400 ml-1">Disability Status</label>
+                <select name="disability" value={formData.disability} onChange={handleChange} className="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-3 text-sm font-bold text-slate-900 outline-none focus:border-[#002f6c] focus:ring-1 focus:ring-[#002f6c] transition-all">
+                  <option value="No">No</option>
+                  <option value="Yes">Yes</option>
+                </select>
+              </div>
+              <div className="space-y-2">
+                <label className="text-[11px] font-black uppercase tracking-widest text-slate-400 ml-1">Marital Status</label>
+                <select name="marital_status" value={formData.marital_status} onChange={handleChange} className="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-3 text-sm font-bold text-slate-900 outline-none focus:border-[#002f6c] focus:ring-1 focus:ring-[#002f6c] transition-all">
+                  <option value="Single">Single</option>
+                  <option value="Married">Married</option>
+                  <option value="Widowed">Widowed</option>
+                  <option value="Divorced">Divorced</option>
+                </select>
+              </div>
+              <div className="space-y-2">
+                <label className="text-[11px] font-black uppercase tracking-widest text-slate-400 ml-1">Area Type</label>
+                <select name="rural_urban" value={formData.rural_urban} onChange={handleChange} className="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-3 text-sm font-bold text-slate-900 outline-none focus:border-[#002f6c] focus:ring-1 focus:ring-[#002f6c] transition-all">
+                  <option value="Rural">Rural</option>
+                  <option value="Urban">Urban</option>
+                </select>
               </div>
             </div>
 
