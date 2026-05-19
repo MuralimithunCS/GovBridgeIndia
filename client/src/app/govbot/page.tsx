@@ -150,7 +150,8 @@ export default function GovBotPage() {
     setLoading(true);
 
     try {
-      const res = await fetch('http://localhost:5000/api/chat', {
+      const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000';
+      const res = await fetch(`${apiUrl}/api/chat`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ query: text })
@@ -285,7 +286,7 @@ export default function GovBotPage() {
                     </div>
                   )}
 
-                  <p className={`text-[11px] font-bold text-slate-300 ${m.role === 'user' ? 'text-right' : ''}`}>
+                  <p suppressHydrationWarning className={`text-[11px] font-bold text-slate-300 ${m.role === 'user' ? 'text-right' : ''}`}>
                     {m.time}
                   </p>
                 </div>

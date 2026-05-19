@@ -31,10 +31,14 @@ export default function LandingPage() {
                 type="text" 
                 value={search}
                 onChange={(e) => setSearch(e.target.value)}
+                onKeyDown={(e) => e.key === 'Enter' && (window.location.href = `/search?q=${search}`)}
                 placeholder="Search schemes, benefits, or keywords..."
                 className="flex-grow bg-transparent py-5 pl-16 pr-6 rounded-3xl text-[16px] font-medium placeholder:text-slate-300 outline-none"
               />
-              <button className="bg-[#002f6c] text-white px-8 py-4 rounded-2xl font-black text-sm uppercase tracking-widest hover:bg-slate-900 transition-colors">
+              <button 
+                onClick={() => window.location.href = `/search?q=${search}`}
+                className="bg-[#002f6c] text-white px-8 py-4 rounded-2xl font-black text-sm uppercase tracking-widest hover:bg-slate-900 transition-colors"
+              >
                 Search
               </button>
             </div>

@@ -27,12 +27,14 @@ const userRoutes = require('./routes/userRoutes');
 const schemeRoutes = require('./routes/schemeRoutes');
 const recommendationRoutes = require('./routes/recommendationRoutes');
 const chatRoutes = require('./routes/chatRoutes');
+const feedbackRoutes = require('./routes/feedbackRoutes');
 const seedSchemes = require('./utils/seedSchemes');
 
 app.use('/api/user', userRoutes);
 app.use('/api/schemes', schemeRoutes);
 app.use('/api/recommendations', recommendationRoutes);
 app.use('/api/chat', chatRoutes);
+app.use('/api/feedback', feedbackRoutes);
 
 app.get('/', (req, res) => {
   res.send('GovBridge India API is running...');

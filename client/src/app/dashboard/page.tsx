@@ -224,6 +224,51 @@ export default function DashboardPage() {
                 </div>
               )}
             </div>
+
+            <div className="mt-12 pt-8 border-t border-slate-50">
+              <h3 className="text-lg font-black text-slate-900 mb-4">Need Help?</h3>
+              <p className="text-[13px] text-slate-400 font-medium mb-6">Can't find a scheme? Or need help applying? Send us a message.</p>
+              
+              <form onSubmit={async (e) => {
+                e.preventDefault();
+                const form = e.target as HTMLFormElement;
+                const message = (form.elements.namedItem('message') as HTMLTextAreaElement).value;
+                if (!message) return;
+
+                try {
+                  const token = await user.getIdToken();
+                  const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000';
+                  const res = await fetch(`${apiUrl}/api/feedback`, {
+                    method: 'POST',
+                    headers: { 
+                      'Content-Type': 'application/json',
+                      'Authorization': `Bearer ${token}`
+                    },
+                    body: JSON.stringify({ 
+                      name: profile?.name || user?.displayName,
+                      email: user?.email,
+                      message,
+                      type: 'support'
+                    })
+                  });
+                  if (res.ok) {
+                    alert('Your message has been sent to our team!');
+                    form.reset();
+                  }
+                } catch (err) {
+                  alert('Error sending message. Please try again.');
+                }
+              }} className="space-y-4">
+                <textarea 
+                  name="message"
+                  placeholder="Tell us what you're looking for..."
+                  className="w-full bg-slate-50 border border-slate-200 rounded-2xl p-4 text-sm font-medium outline-none focus:ring-2 focus:ring-[#002f6c]/10 min-h-[100px] resize-none"
+                ></textarea>
+                <button type="submit" className="w-full bg-[#002f6c] text-white py-4 rounded-xl font-black text-[12px] uppercase tracking-widest shadow-lg shadow-[#002f6c]/10 hover:bg-slate-900 transition-all">
+                  Send Message
+                </button>
+              </form>
+            </div>
           </div>
         </div>
       </main>
