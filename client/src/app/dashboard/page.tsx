@@ -42,7 +42,7 @@ export default function DashboardPage() {
     try {
       const token = await firebaseUser.getIdToken();
       
-      const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000';
+      const apiUrl = process.env.NEXT_PUBLIC_API_URL || '';
       
       // Fetch Profile
       const profileRes = await fetch(`${apiUrl}/api/user/profile`, {
@@ -242,7 +242,7 @@ export default function DashboardPage() {
 
                 try {
                   const token = await user.getIdToken();
-                  const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000';
+                  const apiUrl = process.env.NEXT_PUBLIC_API_URL || '';
                   const res = await fetch(`${apiUrl}/api/feedback`, {
                     method: 'POST',
                     headers: { 

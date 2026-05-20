@@ -16,7 +16,7 @@ function SearchResults() {
     const fetchResults = async () => {
       setLoading(true);
       try {
-        const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000';
+        const apiUrl = process.env.NEXT_PUBLIC_API_URL || '';
         const res = await fetch(`${apiUrl}/api/schemes`);
         const allSchemes = await res.json();
         
