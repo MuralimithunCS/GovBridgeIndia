@@ -50,7 +50,6 @@ export default function SignupPage() {
 
       router.push('/login?verify=true');
     } catch (err: any) {
-      console.error("Signup error:", err);
       setError(getErrorMessage(err.code));
     } finally {
       setLoading(false);

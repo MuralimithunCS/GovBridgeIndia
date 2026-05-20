@@ -75,6 +75,7 @@ export default function SchemeDetailPage() {
 
     setApplying(true);
     try {
+      const token = await user.getIdToken();
       const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000';
       await fetch(`${apiUrl}/api/user/apply`, {
         method: 'POST',
