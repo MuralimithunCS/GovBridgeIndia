@@ -31,6 +31,34 @@ export default function GoogleTranslate() {
     >
       {/* The Google Translate widget will render here */}
       <style dangerouslySetInnerHTML={{ __html: `
+        /* Override new Google Translate classes */
+        .VIpgJd-ZVi9od-xl07Ob-lTBxed {
+          display: flex !important;
+          align-items: center !important;
+          justify-content: center !important;
+          gap: 8px !important;
+          background-color: transparent !important;
+          text-decoration: none !important;
+          padding: 8px 12px !important;
+          width: 100% !important;
+          box-sizing: border-box !important;
+        }
+        .VIpgJd-ZVi9od-xl07Ob-lTBxed span:first-child {
+          color: #475569 !important;
+          font-family: inherit !important;
+          font-size: 13px !important;
+          font-weight: 700 !important;
+          white-space: nowrap !important;
+        }
+        .VIpgJd-ZVi9od-xl07Ob-lTBxed img {
+          display: none !important;
+        }
+        .VIpgJd-ZVi9od-xl07Ob-lTBxed span:last-child {
+          color: #94a3b8 !important;
+          font-size: 10px !important;
+        }
+        
+        /* Fallback for older Google Translate DOM */
         .goog-te-gadget-simple {
           background-color: transparent !important;
           border: none !important;
