@@ -3,6 +3,7 @@
 import { useState, useEffect } from 'react';
 import { Search as SearchIcon, Filter, ChevronRight, Heart, Home, GraduationCap, Briefcase, TrendingUp, Shield, Map, User, Star } from 'lucide-react';
 import Link from 'next/link';
+import ProtectedRoute from '@/components/ProtectedRoute';
 
 // Map UI filters to backend categories (what's stored in Firestore)
 const CATEGORY_MAP: Record<string, string> = {
@@ -51,7 +52,8 @@ export default function SchemesPage() {
   });
 
   return (
-    <div className="min-h-screen bg-slate-50 text-slate-900">
+    <ProtectedRoute>
+      <div className="min-h-screen bg-slate-50 text-slate-900">
       <section className="bg-[#002f6c] pt-16 pb-24 px-6 sm:px-12 text-white relative overflow-hidden">
         <div className="absolute top-0 right-0 w-96 h-96 bg-white/5 rounded-full blur-[100px] -translate-y-1/2 translate-x-1/2"></div>
         <div className="max-w-7xl mx-auto relative z-10">
@@ -138,6 +140,7 @@ export default function SchemesPage() {
         </div>
       </main>
     </div>
+    </ProtectedRoute>
   );
 }
 

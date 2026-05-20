@@ -5,7 +5,7 @@ import { useRouter } from 'next/navigation';
 import { Search, Star, TrendingUp, Bell, ChevronRight, Globe, Home, Heart, Briefcase, GraduationCap, Check, User as UserIcon } from 'lucide-react';
 import Link from 'next/link';
 import { auth } from '@/lib/firebase';
-import { onAuthStateChanged } from 'firebase/auth';
+import { onAuthStateChanged, signOut } from 'firebase/auth';
 
 export default function DashboardPage() {
   const router = useRouter();
@@ -23,6 +23,11 @@ export default function DashboardPage() {
   useEffect(() => {
     const unsubscribe = onAuthStateChanged(auth, async (firebaseUser) => {
       if (firebaseUser) {
+        if (!firebaseUser.emailVerified) {
+          await signOut(auth);
+          router.push('/login?error=unverified');
+          return;
+        }
         setUser(firebaseUser);
         await fetchData(firebaseUser);
       } else {

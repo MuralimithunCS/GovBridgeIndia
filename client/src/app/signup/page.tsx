@@ -5,7 +5,7 @@ import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { Mail, Lock, User, ArrowRight, Globe } from 'lucide-react';
 import { auth } from '@/lib/firebase';
-import { createUserWithEmailAndPassword, updateProfile } from 'firebase/auth';
+import { createUserWithEmailAndPassword, updateProfile, sendEmailVerification } from 'firebase/auth';
 
 function getErrorMessage(code: string): string {
   switch (code) {
@@ -45,7 +45,10 @@ export default function SignupPage() {
         displayName: formData.name
       });
 
-      router.push('/dashboard');
+      // Send email verification
+      await sendEmailVerification(userCredential.user);
+
+      router.push('/login?verify=true');
     } catch (err: any) {
       console.error("Signup error:", err);
       setError(getErrorMessage(err.code));

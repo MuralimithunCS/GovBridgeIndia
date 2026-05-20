@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { Mail, Lock, ArrowRight, Globe } from 'lucide-react';
@@ -27,6 +27,17 @@ export default function LoginPage() {
     email: '',
     password: ''
   });
+  const [successMsg, setSuccessMsg] = useState('');
+
+  useEffect(() => {
+    const params = new URLSearchParams(window.location.search);
+    if (params.get('verify') === 'true') {
+      setSuccessMsg('Account created! Please check your email to verify your account before logging in.');
+    }
+    if (params.get('error') === 'unverified') {
+      setError('Please verify your email address before accessing this page.');
+    }
+  }, []);
 
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -34,7 +45,13 @@ export default function LoginPage() {
     setError('');
 
     try {
-      await signInWithEmailAndPassword(auth, formData.email, formData.password);
+      const userCredential = await signInWithEmailAndPassword(auth, formData.email, formData.password);
+      if (!userCredential.user.emailVerified) {
+        await auth.signOut();
+        setError('Please verify your email address before logging in.');
+        setLoading(false);
+        return;
+      }
       router.push('/dashboard');
     } catch (err: any) {
       console.error("Login error:", err);
@@ -59,6 +76,12 @@ export default function LoginPage() {
         <div className="bg-white rounded-[40px] p-10 sm:p-14 shadow-premium border border-slate-100 text-center">
           <h1 className="text-3xl font-black text-slate-900 mb-2">Welcome Back</h1>
           <p className="text-slate-400 text-[15px] font-medium mb-12">Access your personalized benefits portal</p>
+
+          {successMsg && (
+            <div className="mb-6 p-4 bg-green-50 text-green-700 rounded-2xl text-sm font-bold border border-green-100">
+              {successMsg}
+            </div>
+          )}
 
           {error && (
             <div className="mb-6 p-4 bg-red-50 text-red-600 rounded-2xl text-sm font-bold border border-red-100">

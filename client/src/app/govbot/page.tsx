@@ -3,6 +3,7 @@
 import { useState, useRef, useEffect } from 'react';
 import { MessageSquare, Send, Plus, Bot, ChevronRight, History, ExternalLink, ArrowRight, Sparkles, Zap, BookOpen, HelpCircle } from 'lucide-react';
 import Link from 'next/link';
+import ProtectedRoute from '@/components/ProtectedRoute';
 
 interface SchemeCard {
   id: string;
@@ -198,7 +199,8 @@ export default function GovBotPage() {
   const showWelcome = messages.length <= 1;
 
   return (
-    <div className="h-[calc(100vh-64px)] min-h-[600px] bg-slate-50 flex overflow-hidden">
+    <ProtectedRoute>
+      <div className="h-[calc(100vh-64px)] min-h-[600px] bg-slate-50 flex overflow-hidden">
       {/* SIDEBAR */}
       <aside className="w-[300px] bg-white border-r border-slate-100 hidden lg:flex flex-col">
         <div className="p-6 border-b border-slate-50 flex items-center justify-between">
@@ -363,6 +365,7 @@ export default function GovBotPage() {
         </div>
       </main>
     </div>
+    </ProtectedRoute>
   );
 }
 
