@@ -27,33 +27,45 @@ export default function GoogleTranslate() {
   return (
     <div 
       id="google_translate_element" 
-      className="text-[13px] font-bold text-slate-500 overflow-hidden rounded-lg bg-slate-50 border border-slate-100"
+      className="text-[13px] font-bold text-slate-600 rounded-lg bg-slate-50 border border-slate-200 hover:bg-slate-100 transition-colors w-full flex items-center justify-center"
     >
       {/* The Google Translate widget will render here */}
       <style dangerouslySetInnerHTML={{ __html: `
         .goog-te-gadget-simple {
           background-color: transparent !important;
           border: none !important;
-          padding: 6px 10px !important;
+          padding: 8px 12px !important;
           border-radius: 8px !important;
           font-size: 13px !important;
           font-weight: 700 !important;
           cursor: pointer;
-          color: #64748b !important;
           display: flex !important;
           align-items: center !important;
+          justify-content: center !important;
+          width: 100% !important;
         }
         .goog-te-gadget-icon {
           display: none !important;
         }
         .goog-te-menu-value {
-          color: #64748b !important;
+          color: #475569 !important;
           display: flex !important;
           align-items: center !important;
+          justify-content: space-between !important;
+          width: 100% !important;
+          gap: 8px;
         }
         .goog-te-menu-value span {
-          color: #64748b !important;
+          color: #475569 !important;
           font-family: inherit !important;
+          white-space: nowrap !important;
+        }
+        .goog-te-menu-value img {
+           display: none !important;
+        }
+        .goog-te-gadget {
+           font-family: inherit !important;
+           color: transparent !important;
         }
         /* Hide the Google banner at the top */
         .goog-te-banner-frame.skiptranslate, iframe.goog-te-banner-frame, .VIpgJd-ZVi9od-aZ2wEe-wOHMyf, .VIpgJd-ZVi9od-ORHb-OEVmcd {

@@ -46,7 +46,7 @@ export default function Navbar() {
         </div>
 
         <div className="flex items-center gap-4">
-          <div className="hidden md:block">
+          <div className="hidden md:block flex-shrink-0 min-w-[140px]">
             <GoogleTranslate />
           </div>
           
