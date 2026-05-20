@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
-import { User as UserIcon, Map, Briefcase, ChevronRight, Save, Loader2, ArrowLeft } from 'lucide-react';
+import { User as UserIcon, Map, Briefcase, ChevronRight, Save, Loader2, ArrowLeft, Edit2 } from 'lucide-react';
 import { auth } from '@/lib/firebase';
 import { onAuthStateChanged } from 'firebase/auth';
 import Link from 'next/link';
@@ -13,6 +13,7 @@ export default function ProfilePage() {
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [message, setMessage] = useState('');
+  const [isEditing, setIsEditing] = useState(false);
   
   const [formData, setFormData] = useState({
     name: '',
@@ -43,7 +44,16 @@ export default function ProfilePage() {
 
   const fetchProfile = async (firebaseUser: any) => {
     try {
-      const token = await firebaseUser.getIdToken();
+      let token;
+      try {
+        token = await firebaseUser.getIdToken();
+      } catch (tokenErr) {
+        console.warn("Failed to get fresh token, might be offline:", tokenErr);
+        // Fallback or abort if we can't get a token
+        setLoading(false);
+        return;
+      }
+
       const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000';
       const res = await fetch(`${apiUrl}/api/user/profile`, {
         headers: { 'Authorization': `Bearer ${token}` }
@@ -65,11 +75,20 @@ export default function ProfilePage() {
           marital_status: data.marital_status || 'Single',
           rural_urban: data.rural_urban || 'Rural'
         });
+        // If they already have a profile with age, start in view mode
+        if (data.age) {
+          setIsEditing(false);
+        } else {
+          setIsEditing(true);
+        }
       } else {
         setFormData(prev => ({ ...prev, name: firebaseUser.displayName || '' }));
+        setIsEditing(true); // New user, force edit mode
       }
     } catch (err) {
-      console.error(err);
+      console.error("Profile fetch error:", err);
+      // Don't crash, just show edit mode so they can try again
+      setIsEditing(true);
     } finally {
       setLoading(false);
     }
@@ -81,11 +100,24 @@ export default function ProfilePage() {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    if (!isEditing) {
+      setIsEditing(true);
+      return;
+    }
+
     setSaving(true);
     setMessage('');
     
     try {
-      const token = await user.getIdToken();
+      let token;
+      try {
+        token = await user.getIdToken();
+      } catch (tokenErr) {
+        setMessage('Network error: Unable to authenticate with Firebase.');
+        setSaving(false);
+        return;
+      }
+
       const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000';
       const res = await fetch(`${apiUrl}/api/user/profile`, {
         method: 'POST',
@@ -98,6 +130,7 @@ export default function ProfilePage() {
       
       if (res.ok) {
         setMessage('Profile updated successfully! Generating new recommendations...');
+        setIsEditing(false); // Switch back to view mode on success
         setTimeout(() => {
           router.push('/dashboard');
         }, 1500);
@@ -105,7 +138,7 @@ export default function ProfilePage() {
         setMessage('Failed to update profile. Please try again.');
       }
     } catch (err) {
-      setMessage('Network error.');
+      setMessage('Network error: Cannot connect to the backend server. Is it running?');
     } finally {
       setSaving(false);
     }
@@ -141,15 +174,15 @@ export default function ProfilePage() {
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
               <div className="space-y-2">
                 <label className="text-[11px] font-black uppercase tracking-widest text-slate-400 ml-1">Full Name</label>
-                <input required type="text" name="name" value={formData.name} onChange={handleChange} className="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-3 text-sm font-bold text-slate-900 outline-none focus:border-[#002f6c] focus:ring-1 focus:ring-[#002f6c] transition-all" />
+                <input disabled={!isEditing} required type="text" name="name" value={formData.name} onChange={handleChange} className="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-3 text-sm font-bold text-slate-900 outline-none focus:border-[#002f6c] focus:ring-1 focus:ring-[#002f6c] transition-all disabled:opacity-60" />
               </div>
               <div className="space-y-2">
                 <label className="text-[11px] font-black uppercase tracking-widest text-slate-400 ml-1">Age</label>
-                <input required type="number" name="age" value={formData.age} onChange={handleChange} className="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-3 text-sm font-bold text-slate-900 outline-none focus:border-[#002f6c] focus:ring-1 focus:ring-[#002f6c] transition-all" />
+                <input disabled={!isEditing} required type="number" name="age" value={formData.age} onChange={handleChange} className="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-3 text-sm font-bold text-slate-900 outline-none focus:border-[#002f6c] focus:ring-1 focus:ring-[#002f6c] transition-all disabled:opacity-60" />
               </div>
               <div className="space-y-2">
                 <label className="text-[11px] font-black uppercase tracking-widest text-slate-400 ml-1">Gender</label>
-                <select name="gender" value={formData.gender} onChange={handleChange} className="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-3 text-sm font-bold text-slate-900 outline-none focus:border-[#002f6c] focus:ring-1 focus:ring-[#002f6c] transition-all">
+                <select disabled={!isEditing} name="gender" value={formData.gender} onChange={handleChange} className="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-3 text-sm font-bold text-slate-900 outline-none focus:border-[#002f6c] focus:ring-1 focus:ring-[#002f6c] transition-all disabled:opacity-60 appearance-none">
                   <option value="Male">Male</option>
                   <option value="Female">Female</option>
                   <option value="Other">Other</option>
@@ -157,7 +190,7 @@ export default function ProfilePage() {
               </div>
               <div className="space-y-2">
                 <label className="text-[11px] font-black uppercase tracking-widest text-slate-400 ml-1">Caste Category</label>
-                <select name="category" value={formData.category} onChange={handleChange} className="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-3 text-sm font-bold text-slate-900 outline-none focus:border-[#002f6c] focus:ring-1 focus:ring-[#002f6c] transition-all">
+                <select disabled={!isEditing} name="category" value={formData.category} onChange={handleChange} className="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-3 text-sm font-bold text-slate-900 outline-none focus:border-[#002f6c] focus:ring-1 focus:ring-[#002f6c] transition-all disabled:opacity-60 appearance-none">
                   <option value="General">General</option>
                   <option value="OBC">OBC</option>
                   <option value="SC">SC</option>
@@ -166,15 +199,15 @@ export default function ProfilePage() {
               </div>
               <div className="space-y-2">
                 <label className="text-[11px] font-black uppercase tracking-widest text-slate-400 ml-1">State</label>
-                <input required type="text" name="state" value={formData.state} onChange={handleChange} className="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-3 text-sm font-bold text-slate-900 outline-none focus:border-[#002f6c] focus:ring-1 focus:ring-[#002f6c] transition-all" />
+                <input disabled={!isEditing} required type="text" name="state" value={formData.state} onChange={handleChange} className="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-3 text-sm font-bold text-slate-900 outline-none focus:border-[#002f6c] focus:ring-1 focus:ring-[#002f6c] transition-all disabled:opacity-60" />
               </div>
               <div className="space-y-2">
                 <label className="text-[11px] font-black uppercase tracking-widest text-slate-400 ml-1">District</label>
-                <input required type="text" name="district" value={formData.district} onChange={handleChange} className="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-3 text-sm font-bold text-slate-900 outline-none focus:border-[#002f6c] focus:ring-1 focus:ring-[#002f6c] transition-all" />
+                <input disabled={!isEditing} required type="text" name="district" value={formData.district} onChange={handleChange} className="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-3 text-sm font-bold text-slate-900 outline-none focus:border-[#002f6c] focus:ring-1 focus:ring-[#002f6c] transition-all disabled:opacity-60" />
               </div>
               <div className="space-y-2">
                 <label className="text-[11px] font-black uppercase tracking-widest text-slate-400 ml-1">Occupation</label>
-                <select name="occupation" value={formData.occupation} onChange={handleChange} className="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-3 text-sm font-bold text-slate-900 outline-none focus:border-[#002f6c] focus:ring-1 focus:ring-[#002f6c] transition-all">
+                <select disabled={!isEditing} name="occupation" value={formData.occupation} onChange={handleChange} className="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-3 text-sm font-bold text-slate-900 outline-none focus:border-[#002f6c] focus:ring-1 focus:ring-[#002f6c] transition-all disabled:opacity-60 appearance-none">
                   <option value="Farmer">Farmer</option>
                   <option value="Student">Student</option>
                   <option value="Business">Business</option>
@@ -184,13 +217,13 @@ export default function ProfilePage() {
               </div>
               <div className="space-y-2">
                 <label className="text-[11px] font-black uppercase tracking-widest text-slate-400 ml-1">Annual Income (₹)</label>
-                <input required type="number" name="income" value={formData.income} onChange={handleChange} className="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-3 text-sm font-bold text-slate-900 outline-none focus:border-[#002f6c] focus:ring-1 focus:ring-[#002f6c] transition-all" />
+                <input disabled={!isEditing} required type="number" name="income" value={formData.income} onChange={handleChange} className="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-3 text-sm font-bold text-slate-900 outline-none focus:border-[#002f6c] focus:ring-1 focus:ring-[#002f6c] transition-all disabled:opacity-60" />
               </div>
 
               {/* Additional Details */}
               <div className="space-y-2">
                 <label className="text-[11px] font-black uppercase tracking-widest text-slate-400 ml-1">Education</label>
-                <select name="education" value={formData.education} onChange={handleChange} className="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-3 text-sm font-bold text-slate-900 outline-none focus:border-[#002f6c] focus:ring-1 focus:ring-[#002f6c] transition-all">
+                <select disabled={!isEditing} name="education" value={formData.education} onChange={handleChange} className="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-3 text-sm font-bold text-slate-900 outline-none focus:border-[#002f6c] focus:ring-1 focus:ring-[#002f6c] transition-all disabled:opacity-60 appearance-none">
                   <option value="Below 10th">Below 10th</option>
                   <option value="Secondary (10th)">Secondary (10th)</option>
                   <option value="Higher Secondary (12th)">Higher Secondary (12th)</option>
@@ -200,14 +233,14 @@ export default function ProfilePage() {
               </div>
               <div className="space-y-2">
                 <label className="text-[11px] font-black uppercase tracking-widest text-slate-400 ml-1">Disability Status</label>
-                <select name="disability" value={formData.disability} onChange={handleChange} className="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-3 text-sm font-bold text-slate-900 outline-none focus:border-[#002f6c] focus:ring-1 focus:ring-[#002f6c] transition-all">
+                <select disabled={!isEditing} name="disability" value={formData.disability} onChange={handleChange} className="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-3 text-sm font-bold text-slate-900 outline-none focus:border-[#002f6c] focus:ring-1 focus:ring-[#002f6c] transition-all disabled:opacity-60 appearance-none">
                   <option value="No">No</option>
                   <option value="Yes">Yes</option>
                 </select>
               </div>
               <div className="space-y-2">
                 <label className="text-[11px] font-black uppercase tracking-widest text-slate-400 ml-1">Marital Status</label>
-                <select name="marital_status" value={formData.marital_status} onChange={handleChange} className="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-3 text-sm font-bold text-slate-900 outline-none focus:border-[#002f6c] focus:ring-1 focus:ring-[#002f6c] transition-all">
+                <select disabled={!isEditing} name="marital_status" value={formData.marital_status} onChange={handleChange} className="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-3 text-sm font-bold text-slate-900 outline-none focus:border-[#002f6c] focus:ring-1 focus:ring-[#002f6c] transition-all disabled:opacity-60 appearance-none">
                   <option value="Single">Single</option>
                   <option value="Married">Married</option>
                   <option value="Widowed">Widowed</option>
@@ -216,7 +249,7 @@ export default function ProfilePage() {
               </div>
               <div className="space-y-2">
                 <label className="text-[11px] font-black uppercase tracking-widest text-slate-400 ml-1">Area Type</label>
-                <select name="rural_urban" value={formData.rural_urban} onChange={handleChange} className="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-3 text-sm font-bold text-slate-900 outline-none focus:border-[#002f6c] focus:ring-1 focus:ring-[#002f6c] transition-all">
+                <select disabled={!isEditing} name="rural_urban" value={formData.rural_urban} onChange={handleChange} className="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-3 text-sm font-bold text-slate-900 outline-none focus:border-[#002f6c] focus:ring-1 focus:ring-[#002f6c] transition-all disabled:opacity-60 appearance-none">
                   <option value="Rural">Rural</option>
                   <option value="Urban">Urban</option>
                 </select>
@@ -229,15 +262,35 @@ export default function ProfilePage() {
               </div>
             )}
 
-            <div className="pt-4">
-              <button 
-                type="submit" 
-                disabled={saving}
-                className="w-full flex items-center justify-center gap-2 bg-orange-500 text-white px-6 py-4 rounded-xl font-black text-sm uppercase tracking-widest shadow-lg shadow-orange-500/20 hover:bg-orange-600 transition-all disabled:opacity-50"
-              >
-                {saving ? <Loader2 size={18} className="animate-spin" /> : <Save size={18} />}
-                {saving ? 'Saving Profile...' : 'Save Profile & Get Schemes'}
-              </button>
+            <div className="pt-4 flex flex-col sm:flex-row gap-4">
+              {isEditing ? (
+                <>
+                  <button 
+                    type="submit" 
+                    disabled={saving}
+                    className="flex-1 flex items-center justify-center gap-2 bg-orange-500 text-white px-6 py-4 rounded-xl font-black text-sm uppercase tracking-widest shadow-lg shadow-orange-500/20 hover:bg-orange-600 transition-all disabled:opacity-50"
+                  >
+                    {saving ? <Loader2 size={18} className="animate-spin" /> : <Save size={18} />}
+                    {saving ? 'Saving Profile...' : 'Save Profile & Get Schemes'}
+                  </button>
+                  <button 
+                    type="button"
+                    onClick={() => setIsEditing(false)}
+                    disabled={saving}
+                    className="flex items-center justify-center gap-2 bg-slate-100 text-slate-600 px-6 py-4 rounded-xl font-black text-sm uppercase tracking-widest hover:bg-slate-200 transition-all disabled:opacity-50"
+                  >
+                    Cancel
+                  </button>
+                </>
+              ) : (
+                <button 
+                  type="submit"
+                  className="w-full flex items-center justify-center gap-2 bg-[#002f6c] text-white px-6 py-4 rounded-xl font-black text-sm uppercase tracking-widest shadow-lg shadow-[#002f6c]/20 hover:bg-slate-900 transition-all"
+                >
+                  <Edit2 size={18} />
+                  Edit Profile
+                </button>
+              )}
             </div>
           </form>
         </div>
