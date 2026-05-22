@@ -115,9 +115,9 @@ export default function DashboardPage() {
               <span>{location}</span>
             </div>
           </div>
-          <div className="w-16 h-16 bg-orange-500 rounded-full flex items-center justify-center text-white font-black text-2xl shadow-xl shadow-orange-500/20 ring-4 ring-white/10">
+          <Link href="/profile" title="Edit Profile" className="w-16 h-16 bg-orange-500 rounded-full flex items-center justify-center text-white font-black text-2xl shadow-xl shadow-orange-500/20 ring-4 ring-white/10 hover:bg-[#001b3d] hover:ring-orange-400 transition-all cursor-pointer">
             {userName.charAt(0)}
-          </div>
+          </Link>
         </div>
 
         <div className="max-w-7xl mx-auto mt-8 relative z-10">

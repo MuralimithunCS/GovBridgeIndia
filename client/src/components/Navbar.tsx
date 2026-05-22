@@ -52,9 +52,9 @@ export default function Navbar() {
           
           {user ? (
             <div className="flex items-center gap-3">
-              <div className="w-8 h-8 bg-[#002f6c] rounded-full flex items-center justify-center text-white font-bold text-xs shadow-lg shadow-[#002f6c]/10">
+              <Link href="/profile" title="Edit Profile" className="w-8 h-8 bg-[#002f6c] rounded-full flex items-center justify-center text-white font-bold text-xs shadow-lg shadow-[#002f6c]/10 hover:bg-[#001b3d] transition-colors ring-2 ring-transparent hover:ring-orange-400 ring-offset-1">
                 {initial.toUpperCase()}
-              </div>
+              </Link>
               <button 
                 onClick={handleLogout}
                 className="p-2 text-slate-400 hover:text-red-500 transition-colors"
